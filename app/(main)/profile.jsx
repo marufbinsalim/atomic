@@ -52,14 +52,14 @@ const RenderFileSlider = ({ files, isRepost = false }) => {
           file.type === "image" ? (
             <Image
               key={index}
-              source={{ uri: file.uri }}
+              source={{ uri: file.url }}
               style={isRepost ? styles.repostImage : styles.postImage}
               resizeMode="cover"
             />
           ) : (
             <Video
               key={index}
-              source={{ uri: file.uri }}
+              source={{ uri: file.url }}
               useNativeControls
               resizeMode="cover"
               style={isRepost ? styles.repostImage : styles.postImage}
@@ -110,79 +110,60 @@ const UserHeader = ({ user, router }) => {
   };
 
   return (
-    <LinearGradient
-      colors={["#f8f9fa", "#e9ecef"]}
-      style={styles.headerContainer}
-    >
-      <View style={styles.headerContent}>
-        <Header title="Profile" showBackButton={true} />
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Icon name="logout" size={hp(2.8)} color={theme.colors.danger} />
+    <View style={styles.headerContainer}>
+      <View style={styles.topHeader}>
+        <View style={styles.leftContainer}>
+          <Pressable onPress={() => router.back()}>
+            <Icon name="arrowLeft" size={hp(4)} color={theme.colors.text} />
+          </Pressable>
+          <Text style={styles.username}>{user?.name || "Profile"}</Text>
+        </View>
+        <TouchableOpacity onPress={handleLogout}>
+          <Icon name="logout" size={hp(3.5)} color="#6c757d" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.profileContainer}>
-        <View style={styles.avatarEditContainer}>
+      <View style={styles.profileSection}>
+        <View style={styles.avatarContainer}>
           <Avatar
-            size={hp(14)}
+            size={hp(10)}
             source={user?.image ? { uri: user.image } : defaultAvatar}
             style={styles.avatar}
           />
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => router.push("editProfile")}
-          >
-            <Icon name="edit" size={hp(2)} color="white" />
-          </TouchableOpacity>
         </View>
 
-        <View style={styles.userInfoContainer}>
-          <Text style={styles.userName}>{user.name}</Text>
-
-          {user?.bio && <Text style={styles.userBio}>{user.bio}</Text>}
-
-          <View style={styles.userStats}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>124</Text>
-              <Text style={styles.statLabel}>Posts</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>1.2k</Text>
-              <Text style={styles.statLabel}>Followers</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>356</Text>
-              <Text style={styles.statLabel}>Following</Text>
-            </View>
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>64</Text>
+            <Text style={styles.statLabel}>posts</Text>
           </View>
-        </View>
-
-        <View style={styles.userDetails}>
-          {user?.address && (
-            <View style={styles.detailItem}>
-              <Icon
-                name="map-pin"
-                size={hp(2)}
-                color={theme.colors.textLight}
-              />
-              <Text style={styles.detailText}>{user.address}</Text>
-            </View>
-          )}
-
-          <View style={styles.detailItem}>
-            <Icon name="mail" size={hp(2)} color={theme.colors.textLight} />
-            <Text style={styles.detailText}>{user.email}</Text>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>420K</Text>
+            <Text style={styles.statLabel}>followers</Text>
           </View>
-
-          {user?.phoneNumber && (
-            <View style={styles.detailItem}>
-              <Icon name="phone" size={hp(2)} color={theme.colors.textLight} />
-              <Text style={styles.detailText}>{user.phoneNumber}</Text>
-            </View>
-          )}
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>420</Text>
+            <Text style={styles.statLabel}>following</Text>
+          </View>
         </View>
       </View>
-    </LinearGradient>
+
+      <View style={styles.bioSection}>
+        <Text style={styles.name}>{user?.name}</Text>
+        <Text style={styles.bio}>{user?.bio || "No bio yet"}</Text>
+        {user?.title && <Text style={styles.title}>{user.title}</Text>}
+        <Text style={styles.link}>DM for collabs or cozy vibes 💤❤️</Text>
+      </View>
+
+      <View style={styles.actionButtons}>
+        <Pressable
+          style={styles.actionButton}
+          onPress={() => router.push("editProfile")}
+        >
+          <Text style={styles.actionButtonText}>Edit profile</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 };
 
@@ -458,17 +439,21 @@ export default Profile = () => {
 
         {!loading && posts.length === 0 ? (
           <View style={styles.emptyState}>
-            <Icon name="camera" size={hp(8)} color={theme.colors.textLight} />
+            <Icon name="camera" size={hp(8)} color={"#dbdbdb"} />
             <Text style={styles.emptyStateText}>
               {type === "my_posts"
                 ? "You haven't posted anything yet"
                 : "You haven't reposted anything yet"}
             </Text>
-            <Button
-              title={`Create your first ${type === "my_posts" ? "post" : "post"}`}
+            <Pressable
+              style={styles.createPostButton}
               onPress={() => router.push("newPost")}
-              color={theme.colors.primary}
-            />
+            >
+              <Text style={styles.createPostButtonText}>
+                Create your first {type === "my_posts" ? "post" : "post"}
+              </Text>
+              <Icon name="plus" size={hp(3)} color="#fff" />
+            </Pressable>
           </View>
         ) : (
           <FlatList
@@ -598,61 +583,117 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(4),
     paddingTop: hp(2),
   },
-  logoutButton: {
-    position: "absolute",
-    right: wp(4),
-    top: hp(2),
+
+  headerContainer: {
+    padding: wp(4),
     backgroundColor: "white",
-    padding: wp(2),
-    borderRadius: 50,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  profileContainer: {
-    paddingHorizontal: wp(4),
-    marginTop: hp(2),
-  },
-  avatarEditContainer: {
-    alignSelf: "center",
+  topHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: hp(2),
   },
-  avatar: {
-    borderWidth: 3,
-    borderColor: "white",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  leftContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: wp(4),
   },
-  editButton: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 50,
-    padding: wp(1.5),
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  username: {
+    fontSize: hp(2.5),
+    fontWeight: "bold",
+    marginRight: wp(1),
   },
-  userInfoContainer: {
+  profileSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     marginBottom: hp(2),
+  },
+  avatarContainer: {
+    width: hp(12),
+    height: hp(12),
+    borderRadius: hp(6),
+    borderWidth: 1,
+    borderColor: "#ddd",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatar: {
+    width: "100%",
+    height: "100%",
+    borderRadius: hp(6),
+  },
+  statsContainer: {
+    flexDirection: "row",
+    flex: 1,
+    justifyContent: "space-around",
+    marginLeft: wp(6),
+  },
+  statItem: {
+    alignItems: "center",
+  },
+  statNumber: {
+    fontSize: hp(2.2),
+    fontWeight: "bold",
+  },
+  statLabel: {
+    fontSize: hp(1.8),
+    color: "#666",
+  },
+  bioSection: {
+    marginBottom: hp(2),
+  },
+  name: {
+    fontSize: hp(2.2),
+    fontWeight: "bold",
+    marginBottom: hp(0.5),
+  },
+  bio: {
+    fontSize: hp(2),
+    marginBottom: hp(0.5),
+  },
+  title: {
+    fontSize: hp(1.8),
+    color: "#666",
+    marginBottom: hp(0.5),
+  },
+  link: {
+    fontSize: hp(1.8),
+    color: "#00376B",
+  },
+  actionButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: hp(2),
+  },
+  actionButton: {
+    flex: 1,
+    marginHorizontal: wp(1),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionButtonText: {
+    fontSize: hp(1.8),
+    fontWeight: "bold",
+    backgroundColor: "#dbdbdb80",
+    padding: hp(1),
+    borderRadius: 3,
+  },
+  professionalBadge: {
+    backgroundColor: "#dbdbdb80",
+    padding: hp(1.5),
+    borderRadius: 5,
+    marginBottom: hp(2),
+  },
+  badgeText: {
+    fontSize: hp(1.8),
+    fontWeight: "bold",
+    marginBottom: hp(0.5),
+  },
+  badgeSubtext: {
+    fontSize: hp(1.6),
+    color: "#666",
   },
   userName: {
     fontSize: hp(2.8),
@@ -737,10 +778,25 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: hp(2.2),
-    color: theme.colors.textLight,
+    color: "#1b1b1b80",
     marginVertical: hp(2),
     textAlign: "center",
   },
+  createPostButton: {
+    backgroundColor: theme.colors.primary,
+    padding: hp(1.5),
+    borderRadius: 5,
+    marginTop: hp(2),
+    display: "flex",
+    flexDirection: "row",
+  },
+  createPostButtonText: {
+    color: "#fff",
+    fontSize: hp(2),
+    fontWeight: "bold",
+    marginRight: wp(2),
+  },
+
   postsList: {
     paddingBottom: hp(4),
   },
