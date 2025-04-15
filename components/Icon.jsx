@@ -1,0 +1,68 @@
+import {
+  Home,
+  ArrowLeft,
+  Mail,
+  Lock,
+  User,
+  Heart,
+  Plus,
+  PlusSquare,
+  MessageCircle,
+  LogOut,
+  LucideCircleOff,
+  Pen,
+  Phone,
+  LucideCircleDotDashed,
+  LogIn,
+  MessageSquare,
+  Images,
+  Share2,
+  Bookmark,
+  Repeat,
+  Camera,
+  Video,
+  Bell,
+  TvMinimalPlay,
+  LayoutGrid,
+  ScanSearch,
+  CirclePlus,
+  Film,
+  ShieldUser,
+  ThumbsUp,
+} from "lucide-react-native";
+import React from "react";
+
+const ICONS = {
+  home: LayoutGrid,
+  arrowLeft: ArrowLeft,
+  mail: Mail,
+  lock: Lock,
+  user: User,
+  heart: Heart,
+  thumbsup: ThumbsUp,
+  plus: PlusSquare,
+  circlePlus: CirclePlus,
+  message: MessageCircle,
+  logout: LogOut,
+  edit: Pen,
+  call: Phone,
+  circleDashed: LucideCircleDotDashed,
+  logIn: LogIn,
+  MessageSquare: MessageSquare,
+  images: Images,
+  retweet: Repeat,
+  bookmark: Bookmark,
+  live: Film,
+  camera: Camera,
+  notification: Bell,
+  reel: TvMinimalPlay,
+  scanSearch: ScanSearch,
+  userSignIn: ShieldUser,
+};
+
+const Icon = ({ name, size, color = "black", style = {}, fill = "none" }) => {
+  const IconComponent = ICONS[name] || ICONS["home"];
+  return <IconComponent size={size} color={color} style={style} fill={fill} />;
+};
+
+export default Icon;
