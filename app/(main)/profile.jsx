@@ -465,8 +465,8 @@ export default Profile = () => {
                 : "You haven't reposted anything yet"}
             </Text>
             <Button
-              title={`Create your first ${type === "my_posts" ? "post" : "repost"}`}
-              onPress={() => router.push("createPost")}
+              title={`Create your first ${type === "my_posts" ? "post" : "post"}`}
+              onPress={() => router.push("newPost")}
               color={theme.colors.primary}
             />
           </View>

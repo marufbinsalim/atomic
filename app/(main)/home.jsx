@@ -75,14 +75,14 @@ const RenderFileSlider = ({ files, isRepost = false }) => {
           file.type === "image" ? (
             <Image
               key={index}
-              source={{ uri: file.uri }}
+              source={{ uri: file.url }}
               style={isRepost ? styles.repostImage : styles.postImage}
               resizeMode="cover"
             />
           ) : (
             <Video
               key={index}
-              source={{ uri: file.uri }}
+              source={{ uri: file.url }}
               useNativeControls
               resizeMode="cover"
               style={isRepost ? styles.repostImage : styles.postImage}
@@ -390,7 +390,9 @@ export default Home = () => {
           ListFooterComponent={
             noMorePosts ? (
               <Text style={{ textAlign: "center", padding: hp(2) }}>
-                No more posts to load
+                {posts.length > 0
+                  ? "No more posts to load"
+                  : "No posts to show!"}
               </Text>
             ) : loading && !refreshing ? (
               <View style={{ padding: hp(2) }}>
@@ -703,6 +705,7 @@ export default Home = () => {
           onClose={() => setMenuVisible(false)}
           onCreatePost={() => {
             // handle new post
+            setMenuVisible(false);
             router.push("newPost");
           }}
           onCreateStory={() => {

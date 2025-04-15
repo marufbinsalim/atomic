@@ -18,10 +18,10 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import Icon from "../../components/Icon";
 import { Video } from "expo-av";
-import { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase";
-import SpinningIcon from "../../components/Loader";
 import Loading from "../../components/Loading";
+import * as FileSystem from "expo-file-system";
+import { decode } from "base64-arraybuffer";
 
 export default function NewPost() {
   const { user } = useAuth();
@@ -52,34 +52,97 @@ export default function NewPost() {
       const selected = result.assets.map((asset) => ({
         uri: asset.uri,
         type: asset.type, // 'image' or 'video'
+        fileName: asset.uri.split("/").pop(),
+        mimeType: asset.mimeType,
       }));
       setAssets((prev) => [...prev, ...selected]);
     }
   };
 
-  const handlePost = async () => {
-    setPostUploading(true);
-    const postData = {
-      userId: user.id,
-      content: postContent,
-      assets,
-    };
-    let { error: uploadError } = await supabase.from("posts").insert([
-      {
-        userId: postData.userId,
-        body: postData.content,
-        file: postData.assets,
-      },
-    ]);
-    console.log("Upload Error:", uploadError);
-    let { data, error } = await supabase.from("posts").select("*");
-    setPostContent("");
-    setAssets([]);
-    setPostUploading(false);
+  const uploadFileToStorage = async (file) => {
+    try {
+      // Read the file as base64
+      const base64 = await FileSystem.readAsStringAsync(file.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
 
-    console.log("Data:", data);
-    console.log("Post submitted:", postData);
-    Alert.alert("Post Submitted", "Check console log for the post data.");
+      // Generate a unique filename
+      const fileExt = file.fileName.split(".").pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      // Upload to Supabase storage
+      const { data, error } = await supabase.storage
+        .from("posts") // Your bucket name
+        .upload(filePath, decode(base64), {
+          contentType: file.mimeType,
+        });
+
+      if (error) {
+        console.error("Upload error:", error);
+        throw error;
+      }
+
+      // Get the public URL
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("posts").getPublicUrl(filePath);
+
+      return {
+        url: publicUrl,
+        type: file.type,
+      };
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      throw error;
+    }
+  };
+
+  const handlePost = async () => {
+    if (!postContent.trim() && assets.length === 0) {
+      Alert.alert(
+        "Empty Post",
+        "Please add some content or media to your post",
+      );
+      return;
+    }
+
+    setPostUploading(true);
+
+    try {
+      // Upload all assets first
+      const uploadedAssets = [];
+      for (const asset of assets) {
+        const uploaded = await uploadFileToStorage(asset);
+        uploadedAssets.push(uploaded);
+      }
+
+      // Create the post with the asset URLs
+      const { error: uploadError } = await supabase.from("posts").insert([
+        {
+          userId: user.id,
+          body: postContent,
+          file: uploadedAssets,
+        },
+      ]);
+
+      if (uploadError) {
+        console.error("Post creation error:", uploadError);
+        Alert.alert("Error", "Failed to create post");
+        return;
+      }
+
+      // Reset form
+      setPostContent("");
+      setAssets([]);
+      router.push("home");
+      Alert.alert("Success", "Your post has been created!");
+    } catch (error) {
+      console.error("Error in handlePost:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setPostUploading(false);
+    }
   };
 
   return (
@@ -167,6 +230,7 @@ export default function NewPost() {
               },
             ]}
             onPress={handlePost}
+            disabled={postUploading}
           >
             <Text
               style={[
