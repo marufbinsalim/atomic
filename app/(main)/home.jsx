@@ -104,7 +104,7 @@ const RenderFileSlider = ({ files, isRepost = false }) => {
   );
 };
 
-function likesText(likes) {
+function PostStatText(likes) {
   if (!likes || likes === 0) return "";
   if (likes === 1) return "1";
   return `${likes}`;
@@ -167,7 +167,7 @@ export default Home = () => {
     const { data, error } = await supabase
       .from("posts")
       .select(
-        `*, users (id, name, image), postLikes (id, userId), postBookmarks (id, userId), posts:original_post(*, users (id, name, image))`,
+        `*, users (id, name, image), postLikes (id, userId), postBookmarks (id, userId), posts:original_post(*, users (id, name, image)), comments(id, userId)`,
       )
       .range(page * limit, (page + 1) * limit - 1)
       .order("created_at", { ascending: false });
@@ -515,7 +515,7 @@ export default Home = () => {
                             color: "#000",
                           }}
                         >
-                          {likesText(item.postLikes?.length)}
+                          {PostStatText(item.postLikes?.length)}
                         </Text>
                       )}
                     </Pressable>
@@ -524,8 +524,24 @@ export default Home = () => {
                         setSelectedPostId(item.id);
                         setShowComments(true);
                       }}
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: wp(2),
+                      }}
                     >
                       <Icon name="MessageSquare" size={hp(2.7)} color="#000" />
+                      {item.comments?.length > 0 && (
+                        <Text
+                          style={{
+                            fontSize: hp(2),
+                            color: "#000",
+                          }}
+                        >
+                          {PostStatText(item.comments?.length)}
+                        </Text>
+                      )}
                     </Pressable>
                     <Pressable onPress={() => repost(item)}>
                       <View style={{ flex: 1, alignItems: "flex-end" }}>
@@ -602,17 +618,33 @@ export default Home = () => {
                           color: "#000",
                         }}
                       >
-                        {likesText(item.postLikes?.length)}
+                        {PostStatText(item.postLikes?.length)}
                       </Text>
                     )}
                   </Pressable>
                   <Pressable
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: wp(2),
+                    }}
                     onPress={() => {
                       setSelectedPostId(item.id);
                       setShowComments(true);
                     }}
                   >
                     <Icon name="MessageSquare" size={hp(2.7)} color="#000" />
+                    {item.comments?.length > 0 && (
+                      <Text
+                        style={{
+                          fontSize: hp(2),
+                          color: "#000",
+                        }}
+                      >
+                        {PostStatText(item.comments?.length)}
+                      </Text>
+                    )}
                   </Pressable>
                   <Pressable onPress={() => repost(item)}>
                     <View style={{ flex: 1, alignItems: "flex-end" }}>
@@ -721,6 +753,7 @@ export default Home = () => {
           visible={showComments}
           postId={selectedPostId}
           user={user}
+          setPosts={setPosts}
         />
       </View>
     </ScreenWrapper>

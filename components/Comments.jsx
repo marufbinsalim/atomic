@@ -16,8 +16,9 @@ import { theme } from "../constants/themes";
 import Avatar from "./Avatar";
 import { defaultAvatar } from "../constants";
 import Loading from "./Loading";
+import Icon from "./Icon";
 
-const CommentsDrawer = ({ visible, onClose, postId, user }) => {
+const CommentsDrawer = ({ visible, onClose, postId, user, setPosts }) => {
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
   const [postingComment, setPostingComment] = useState(false);
@@ -25,9 +26,12 @@ const CommentsDrawer = ({ visible, onClose, postId, user }) => {
   const fetchComments = async () => {
     const { data, error } = await supabase
       .from("comments")
-      .select("*, users (id, name, image)")
+      .select("*, users (id, name, image), commentLikes (id, userId)")
       .eq("postId", postId)
       .order("created_at", { ascending: false });
+
+    console.log(data, error);
+    0;
 
     if (!error) {
       setComments(data);
@@ -38,14 +42,29 @@ const CommentsDrawer = ({ visible, onClose, postId, user }) => {
     if (!commentText.trim()) return;
     setPostingComment(true);
 
-    const { error } = await supabase.from("comments").insert({
-      postId,
-      userId: user.id,
-      text: commentText,
-    });
+    const { error, data } = await supabase
+      .from("comments")
+      .insert({
+        postId,
+        userId: user.id,
+        text: commentText,
+      })
+      .select("id, userId")
+      .single();
     console.log(error);
 
     if (!error) {
+      setPosts((prev) => {
+        const newPosts = [...prev];
+        const postIndex = newPosts.findIndex((post) => post.id === postId);
+        if (postIndex !== -1) {
+          newPosts[postIndex].comments = [
+            ...newPosts[postIndex].comments,
+            data,
+          ];
+        }
+        return newPosts;
+      });
       setCommentText("");
       fetchComments(); // reload
     }
@@ -60,7 +79,11 @@ const CommentsDrawer = ({ visible, onClose, postId, user }) => {
   return (
     <Modal
       isVisible={visible}
-      onBackdropPress={onClose}
+      onBackdropPress={() => {
+        setComments([]);
+        setCommentText("");
+        onClose();
+      }}
       style={{ justifyContent: "flex-end", margin: 0 }}
     >
       <KeyboardAvoidingView
@@ -83,12 +106,31 @@ const CommentsDrawer = ({ visible, onClose, postId, user }) => {
           renderItem={({ item }) => (
             <View style={styles.commentRow}>
               <Avatar
+                rounded={hp(5)}
                 source={item.users?.image || defaultAvatar}
-                size={hp(3)}
+                size={hp(5)}
               />
-              <View style={styles.commentText}>
-                <Text style={styles.name}>{item.users?.name}</Text>
-                <Text>{item.text}</Text>
+              <View
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  flex: 1,
+                }}
+              >
+                <View style={styles.commentText}>
+                  <Text style={styles.name}>{item.users?.name}</Text>
+                  <Text>{item.text}</Text>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                >
+                  <Icon name="thumbsup" size={hp(3)} />
+                  <Text>{item.commentLikes.length}</Text>
+                </View>
               </View>
             </View>
           )}
@@ -136,9 +178,7 @@ const styles = StyleSheet.create({
     gap: wp(2),
     marginBottom: hp(1.5),
   },
-  commentText: {
-    flex: 1,
-  },
+  commentText: {},
   name: {
     fontWeight: "600",
     marginBottom: 2,
