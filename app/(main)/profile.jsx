@@ -101,7 +101,15 @@ const RenderFilePreview = ({ files, isRepost = false }) => {
   );
 };
 
-const UserHeader = ({ user, router, posts, type, isLoading }) => {
+const UserHeader = ({
+  user,
+  router,
+  posts,
+  followersCount,
+  followingCount,
+  type,
+  isLoading,
+}) => {
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -173,11 +181,11 @@ const UserHeader = ({ user, router, posts, type, isLoading }) => {
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>followers</Text>
-          <Text style={styles.statNumber}>0</Text>
+          <Text style={styles.statNumber}>{followersCount}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>following</Text>
-          <Text style={styles.statNumber}>0</Text>
+          <Text style={styles.statNumber}>{followingCount}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Likes</Text>
@@ -192,8 +200,6 @@ const PostPreview = ({ post, isRepost = false }) => {
   const files = isRepost
     ? JSON.parse(post.posts?.file || "[]")
     : JSON.parse(post.file || "[]");
-
-  console.log("Post files:", files);
 
   return (
     <View style={[styles.postPreview, isRepost && styles.repostPreview]}>
@@ -249,6 +255,8 @@ export default Profile = () => {
   const [type, setType] = React.useState("my_posts");
   const [posts, setPosts] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
+  const [followingCount, setFollowingCount] = React.useState(0);
+  const [followersCount, setFollowersCount] = React.useState(0);
 
   useEffect(() => {
     async function fetchMyPosts() {
@@ -262,7 +270,6 @@ export default Profile = () => {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching posts:", error);
         return;
       }
       setPosts(data);
@@ -280,10 +287,8 @@ export default Profile = () => {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching reposts:", error);
         return;
       }
-      console.log("Reposts data:", data);
       setPosts(data);
       setLoading(false);
     }
@@ -291,10 +296,36 @@ export default Profile = () => {
     if (user && type === "my_posts") {
       fetchMyPosts();
     } else if (user && type === "reposts") {
-      console.log("fetching reposts");
       fetchMyReposts();
     }
   }, [user, type]);
+
+  useEffect(() => {
+    async function fetchUserData() {
+      console.log("Fetching user data...for", user.id);
+      let { data, error } = await supabase
+        .from("userFollows")
+        .select("*")
+        .eq("followed", user.id);
+      if (error) {
+        console.log("Error fetching user data:", error);
+        return;
+      } else {
+        setFollowersCount(data.length);
+      }
+      const { data: followingData, error: followingError } = await supabase
+        .from("userFollows")
+        .select("*")
+        .eq("followed_by", user.id);
+
+      if (followingError) {
+        console.log("Error fetching following data:", followingError);
+        return;
+      }
+      setFollowingCount(followingData.length);
+    }
+    if (user) fetchUserData();
+  }, [user]);
 
   return (
     <ScreenWrapper>
@@ -302,6 +333,8 @@ export default Profile = () => {
         user={user}
         router={router}
         posts={posts}
+        followersCount={followersCount}
+        followingCount={followingCount}
         type={type}
         isLoading={loading}
       />

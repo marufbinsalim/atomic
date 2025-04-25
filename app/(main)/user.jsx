@@ -101,7 +101,83 @@ const RenderFilePreview = ({ files, isRepost = false }) => {
   );
 };
 
-const UserHeader = ({ user, router, posts, type, isLoading }) => {
+const UserHeader = ({ user, currentUser, router, posts, type, isLoading }) => {
+  const [followers, setFollowers] = useState([]);
+  const [followingCount, setFollowingCount] = useState(0);
+
+  const isFollowing = currentUser
+    ? followers.some((follower) => follower.followed_by === currentUser.id)
+    : false;
+
+  async function toggleFollow() {
+    if (!currentUser) {
+      Alert.alert("Please Sign In", "You need to sign in to like a post", [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Sign In",
+          onPress: () => router.push("login"),
+        },
+      ]);
+
+      return;
+    }
+
+    if (isFollowing) {
+      setFollowers((prev) =>
+        prev.filter((follower) => follower.followed_by !== currentUser.id),
+      );
+      await supabase
+        .from("userFollows")
+        .delete()
+        .eq("followed_by", currentUser.id)
+        .eq("followed", user.id);
+    } else {
+      setFollowers((prev) => [
+        ...prev,
+        { followed_by: currentUser.id, followed: user.id },
+      ]);
+      await supabase
+        .from("userFollows")
+        .insert([{ followed_by: currentUser.id, followed: user.id }]);
+    }
+  }
+
+  useEffect(() => {
+    async function fetchFollowers() {
+      const { data, error } = await supabase
+        .from("userFollows")
+        .select("*")
+        .eq("followed", user.id);
+
+      if (error) {
+        console.error("Error fetching followers:", error);
+        return;
+      }
+      setFollowers(data);
+    }
+
+    async function fetchFollowingCount() {
+      const { count, error } = await supabase
+        .from("userFollows")
+        .select("*", { count: "exact" })
+        .eq("followed_by", user.id);
+
+      if (error) {
+        console.error("Error fetching following count:", error);
+        return;
+      }
+      setFollowingCount(count);
+    }
+
+    if (user) {
+      fetchFollowers();
+      fetchFollowingCount();
+    }
+  }, [user]);
+
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -146,9 +222,15 @@ const UserHeader = ({ user, router, posts, type, isLoading }) => {
           />
         </View>
         <View style={styles.actionButtons}>
-          <Pressable style={styles.actionButton}>
-            <Text style={styles.actionButtonText}>Follow</Text>
-            <Icon name="follow" size={hp(2)} color="#fff" />
+          <Pressable style={styles.actionButton} onPress={toggleFollow}>
+            <Text style={styles.actionButtonText}>
+              {isFollowing ? "Unfollow" : "Follow"}
+            </Text>
+            {isFollowing ? (
+              <Icon name="unfollow" size={hp(2)} color="#fff" />
+            ) : (
+              <Icon name="follow" size={hp(2)} color="#fff" />
+            )}
           </Pressable>
         </View>
       </View>
@@ -170,11 +252,11 @@ const UserHeader = ({ user, router, posts, type, isLoading }) => {
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>followers</Text>
-          <Text style={styles.statNumber}>0</Text>
+          <Text style={styles.statNumber}>{followers.length || 0}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>following</Text>
-          <Text style={styles.statNumber}>0</Text>
+          <Text style={styles.statNumber}>{followingCount}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Likes</Text>
@@ -271,7 +353,7 @@ export default UserPage = () => {
       setUserLoading(false);
     }
     if (local && local.id) {
-      if (local.id === authUser.id) {
+      if (authUser && local.id === authUser.id) {
         router.push("profile");
       }
       fetchUser(local.id);
@@ -355,6 +437,7 @@ export default UserPage = () => {
     <ScreenWrapper>
       <UserHeader
         user={user}
+        currentUser={authUser}
         router={router}
         posts={posts}
         type={type}
