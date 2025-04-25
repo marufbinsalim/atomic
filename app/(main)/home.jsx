@@ -422,11 +422,17 @@ export default Home = () => {
               return (
                 <View style={styles.postCard} key={item.id}>
                   <View style={styles.postHeader}>
-                    <Avatar
-                      source={item.posts?.users?.image || defaultAvatar}
-                      size={hp(4)}
-                      style={styles.avatarImage}
-                    />
+                    <Pressable
+                      onPress={() => {
+                        router.push(`user?id=${item.posts?.users?.id}`);
+                      }}
+                    >
+                      <Avatar
+                        source={item.posts?.users?.image || defaultAvatar}
+                        size={hp(4)}
+                        style={styles.avatarImage}
+                      />
+                    </Pressable>
 
                     <View
                       style={{
@@ -458,11 +464,17 @@ export default Home = () => {
 
                   <View style={styles.postCard} key={item.id}>
                     <View style={styles.postHeader}>
-                      <Avatar
-                        source={item.users?.image || defaultAvatar}
-                        size={hp(4)}
-                        style={styles.avatarImage}
-                      />
+                      <Pressable
+                        onPress={() => {
+                          router.push(`user?id=${item.users?.id}`);
+                        }}
+                      >
+                        <Avatar
+                          source={item.users?.image || defaultAvatar}
+                          size={hp(4)}
+                          style={styles.avatarImage}
+                        />
+                      </Pressable>
 
                       <View
                         style={{
@@ -563,11 +575,17 @@ export default Home = () => {
             return (
               <View style={styles.postCard} key={item.id}>
                 <View style={styles.postHeader}>
-                  <Avatar
-                    source={item.users?.image || defaultAvatar}
-                    size={hp(4)}
-                    style={styles.avatarImage}
-                  />
+                  <Pressable
+                    onPress={() => {
+                      router.push(`user?id=${item.users?.id}`);
+                    }}
+                  >
+                    <Avatar
+                      source={item.users?.image || defaultAvatar}
+                      size={hp(4)}
+                      style={styles.avatarImage}
+                    />
+                  </Pressable>
                   <View
                     style={{
                       flexDirection: "column",

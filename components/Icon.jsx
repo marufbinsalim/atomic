@@ -29,6 +29,9 @@ import {
   Film,
   ShieldUser,
   ThumbsUp,
+  Play,
+  LucideUserRoundPlus,
+  LucideUserRoundMinus,
 } from "lucide-react-native";
 import React from "react";
 
@@ -58,6 +61,9 @@ const ICONS = {
   reel: TvMinimalPlay,
   scanSearch: ScanSearch,
   userSignIn: ShieldUser,
+  play: Play,
+  follow: LucideUserRoundPlus,
+  unfollow: LucideUserRoundMinus,
 };
 
 const Icon = ({ name, size, color = "black", style = {}, fill = "none" }) => {

@@ -1,3 +1,11 @@
+import React, { useEffect, useRef, useState } from "react";
+import { Button } from "react-native";
+import { hp, wp } from "../../helpers/common";
+import { theme } from "../../constants/themes";
+import { Pressable } from "react-native";
+import Icon from "../../components/Icon";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import Loading from "../../components/Loading";
 import {
   View,
   Text,
@@ -9,22 +17,14 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../lib/supabase";
-import { Button } from "react-native";
-import { hp, wp } from "../../helpers/common";
-import { theme } from "../../constants/themes";
-import { Pressable } from "react-native";
-import Icon from "../../components/Icon";
-import { useRouter } from "expo-router";
+
 import Header from "../../components/Header";
 import Avatar from "../../components/Avatar";
-import Loading from "../../components/Loading";
 import { defaultAvatar } from "../../constants";
 import { Video } from "expo-av";
-import { LinearGradient } from "expo-linear-gradient";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -146,12 +146,9 @@ const UserHeader = ({ user, router, posts, type, isLoading }) => {
           />
         </View>
         <View style={styles.actionButtons}>
-          <Pressable
-            style={styles.actionButton}
-            onPress={() => router.push("editProfile")}
-          >
-            <Text style={styles.actionButtonText}>Edit profile</Text>
-            <Icon name="edit" size={hp(2)} color="#fff" />
+          <Pressable style={styles.actionButton}>
+            <Text style={styles.actionButtonText}>Follow</Text>
+            <Icon name="follow" size={hp(2)} color="#fff" />
           </Pressable>
         </View>
       </View>
@@ -243,12 +240,43 @@ const PostPreview = ({ post, isRepost = false }) => {
   );
 };
 
-export default Profile = () => {
-  const { user, setAuth } = useAuth();
+export default UserPage = () => {
+  const local = useLocalSearchParams();
+  console.log("Local:", local);
   const router = useRouter();
+
+  const [user, setUser] = useState(null);
+  const [userLoading, setUserLoading] = React.useState(true);
   const [type, setType] = React.useState("my_posts");
   const [posts, setPosts] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = useState(true);
+  console.log("Local:", local.id);
+  const { user: authUser } = useAuth();
+
+  useEffect(() => {
+    async function fetchUser(id) {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching user:", error);
+        setUser(null);
+      } else {
+        console.log("User data:", data);
+        setUser(data);
+      }
+      setUserLoading(false);
+    }
+    if (local && local.id) {
+      if (local.id === authUser.id) {
+        router.push("profile");
+      }
+      fetchUser(local.id);
+    }
+  }, []);
 
   useEffect(() => {
     async function fetchMyPosts() {
@@ -296,6 +324,33 @@ export default Profile = () => {
     }
   }, [user, type]);
 
+  if (userLoading) {
+    return (
+      <ScreenWrapper>
+        <View style={{ display: "flex", flex: 1, justifyContent: "center" }}>
+          <Loading />
+        </View>
+      </ScreenWrapper>
+    );
+  }
+
+  if (!userLoading && !user) {
+    return (
+      <ScreenWrapper>
+        <View style={{ display: "flex", flex: 1, justifyContent: "center" }}>
+          <Text style={{ textAlign: "center" }}>User not found</Text>
+          <Pressable
+            onPress={() => {
+              router.back();
+            }}
+          >
+            <Text style={{ textAlign: "center" }}>Go Back</Text>
+          </Pressable>
+        </View>
+      </ScreenWrapper>
+    );
+  }
+
   return (
     <ScreenWrapper>
       <UserHeader
@@ -305,7 +360,6 @@ export default Profile = () => {
         type={type}
         isLoading={loading}
       />
-
       <View style={styles.contentContainer}>
         <View style={styles.tabContainer}>
           <Pressable
@@ -321,7 +375,7 @@ export default Profile = () => {
                 type === "my_posts" && styles.activeTabButtonText,
               ]}
             >
-              My Posts
+              Posts
             </Text>
           </Pressable>
           <Pressable
