@@ -135,7 +135,7 @@ const UserHeader = ({
     <View style={styles.headerContainer}>
       <View style={styles.topHeader}>
         <View style={styles.leftContainer}>
-          <Pressable onPress={() => router.back()}>
+          <Pressable onPress={() => router.push("home")}>
             <Icon name="arrowLeft" size={hp(4)} color={theme.colors.text} />
           </Pressable>
           <Text style={styles.username}>{user?.name || "Profile"}</Text>
@@ -149,7 +149,7 @@ const UserHeader = ({
         <View style={styles.avatarContainer}>
           <Avatar
             size={hp(10)}
-            source={user?.image ? { uri: user.image } : defaultAvatar}
+            uri={user?.image || defaultAvatar}
             style={styles.avatar}
           />
         </View>
@@ -166,9 +166,7 @@ const UserHeader = ({
 
       <View style={styles.bioSection}>
         <Text style={styles.name}>{user?.name}</Text>
-        <Text style={styles.bio}>{user?.bio || "No bio yet"}</Text>
-        {user?.title && <Text style={styles.title}>{user.title}</Text>}
-        <Text style={styles.link}>DM for collabs or cozy vibes 💤❤️</Text>
+        <Text style={styles.link}>{user?.bio || "No bio yet"}</Text>
       </View>
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
@@ -206,17 +204,20 @@ const PostPreview = ({ post, isRepost = false }) => {
       {isRepost && (
         <View style={styles.repostHeader}>
           <Icon name="repeat" size={hp(2.5)} color={theme.colors.textLight} />
-          <Text style={styles.repostText}>You reposted</Text>
+          <Text style={styles.repostText}>
+            You reposted
+            {post.body ? " with caption" : ""}
+          </Text>
         </View>
       )}
 
       <View style={styles.previewHeader}>
         <Avatar
-          source={
+          uri={`${
             isRepost
               ? post.posts?.users?.image || defaultAvatar
               : post.users?.image || defaultAvatar
-          }
+          }`}
           size={hp(4)}
           style={styles.previewAvatar}
         />
@@ -225,7 +226,7 @@ const PostPreview = ({ post, isRepost = false }) => {
         </Text>
       </View>
 
-      {post.body && (
+      {(post.body || post.posts?.body) && (
         <Text style={styles.previewBody} numberOfLines={2} ellipsizeMode="tail">
           {isRepost ? post.posts?.body : post.body}
         </Text>
@@ -598,7 +599,7 @@ const styles = StyleSheet.create({
     borderColor: "#e9ecef",
   },
   repostPreview: {
-    width: (screenWidth - wp(6)) / 2,
+    width: (screenWidth - wp(16)) / 2,
     backgroundColor: "white",
     borderRadius: 8,
     overflow: "hidden",

@@ -217,7 +217,7 @@ const UserHeader = ({ user, currentUser, router, posts, type, isLoading }) => {
         <View style={styles.avatarContainer}>
           <Avatar
             size={hp(10)}
-            source={user?.image ? { uri: user.image } : defaultAvatar}
+            uri={user?.image ? user.image : defaultAvatar}
             style={styles.avatar}
           />
         </View>
@@ -279,13 +279,13 @@ const PostPreview = ({ post, isRepost = false }) => {
       {isRepost && (
         <View style={styles.repostHeader}>
           <Icon name="repeat" size={hp(2.5)} color={theme.colors.textLight} />
-          <Text style={styles.repostText}>You reposted</Text>
+          <Text style={styles.repostText}>reposted</Text>
         </View>
       )}
 
       <View style={styles.previewHeader}>
         <Avatar
-          source={
+          uri={
             isRepost
               ? post.posts?.users?.image || defaultAvatar
               : post.users?.image || defaultAvatar
@@ -298,7 +298,7 @@ const PostPreview = ({ post, isRepost = false }) => {
         </Text>
       </View>
 
-      {post.body && (
+      {(post.body || post.posts.body) && (
         <Text style={styles.previewBody} numberOfLines={2} ellipsizeMode="tail">
           {isRepost ? post.posts?.body : post.body}
         </Text>
@@ -702,7 +702,7 @@ const styles = StyleSheet.create({
     borderColor: "#e9ecef",
   },
   repostPreview: {
-    width: (screenWidth - wp(6)) / 2,
+    width: (screenWidth - wp(16)) / 2,
     backgroundColor: "white",
     borderRadius: 8,
     overflow: "hidden",

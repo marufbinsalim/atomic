@@ -424,11 +424,11 @@ export default Home = () => {
                   <View style={styles.postHeader}>
                     <Pressable
                       onPress={() => {
-                        router.push(`user?id=${item.posts?.users?.id}`);
+                        router.push(`user?id=${item.users?.id}`);
                       }}
                     >
                       <Avatar
-                        source={item.posts?.users?.image || defaultAvatar}
+                        uri={item?.users?.image || defaultAvatar}
                         size={hp(4)}
                         style={styles.avatarImage}
                       />
@@ -446,9 +446,7 @@ export default Home = () => {
                           marginBottom: hp(1),
                         }}
                       >
-                        <Text style={styles.userName}>
-                          {item?.posts?.users?.name}
-                        </Text>
+                        <Text style={styles.userName}>{item?.users?.name}</Text>
 
                         <Text
                           style={{
@@ -461,16 +459,28 @@ export default Home = () => {
                       </View>
                     </View>
                   </View>
+                  {item.body && (
+                    <Text
+                      style={{
+                        fontSize: hp(2),
+                        paddingHorizontal: wp(2),
+                        paddingBottom: hp(1),
+                        color: "#333",
+                      }}
+                    >
+                      {item.body}
+                    </Text>
+                  )}
 
                   <View style={styles.postCard} key={item.id}>
                     <View style={styles.postHeader}>
                       <Pressable
                         onPress={() => {
-                          router.push(`user?id=${item.users?.id}`);
+                          router.push(`user?id=${item.posts.users?.id}`);
                         }}
                       >
                         <Avatar
-                          source={item.users?.image || defaultAvatar}
+                          uri={item.posts.users?.image || defaultAvatar}
                           size={hp(4)}
                           style={styles.avatarImage}
                         />
@@ -482,7 +492,9 @@ export default Home = () => {
                           paddingHorizontal: wp(2),
                         }}
                       >
-                        <Text style={styles.userName}>{item.users?.name}</Text>
+                        <Text style={styles.userName}>
+                          {item.posts.users?.name}
+                        </Text>
                         <Text
                           style={{
                             color: "#aaa",
@@ -581,7 +593,7 @@ export default Home = () => {
                     }}
                   >
                     <Avatar
-                      source={item.users?.image || defaultAvatar}
+                      uri={item.users?.image || defaultAvatar}
                       size={hp(4)}
                       style={styles.avatarImage}
                     />

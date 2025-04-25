@@ -188,7 +188,7 @@ const CommentsDrawer = ({ visible, onClose, postId, user, setPosts }) => {
             >
               <Avatar
                 rounded={hp(5)}
-                source={item.users?.image || defaultAvatar}
+                uri={item.users?.image || defaultAvatar}
                 size={hp(5)}
                 containerStyle={{ marginRight: 10 }}
               />
